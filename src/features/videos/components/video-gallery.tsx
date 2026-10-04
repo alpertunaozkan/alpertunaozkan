@@ -80,7 +80,9 @@ export function VideoGallery({ videos, categories }: VideoGalleryProps) {
                 <h2 className="mt-4 font-serif text-xl leading-snug font-semibold text-balance text-navy-950">
                   {video.title}
                 </h2>
-                <p className="mt-3 line-clamp-3 text-[15px] leading-relaxed text-slate-600">{video.description}</p>
+                {video.description ? (
+                  <p className="mt-3 line-clamp-3 text-[15px] leading-relaxed text-slate-600">{video.description}</p>
+                ) : null}
                 <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-2 pt-6">
                   <button
                     type="button"

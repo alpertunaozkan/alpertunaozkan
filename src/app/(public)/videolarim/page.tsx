@@ -46,7 +46,8 @@ export default async function VideosPage() {
           "@type": "VideoObject",
           "@id": `${pageUrl}#${video.id}`,
           name: video.title,
-          description: video.description,
+          // Açıklaması girilmemiş videolarda (ör. eski sistemden aktarılanlar) başlık kullanılır; boş değer geçersizdir.
+          description: video.description.trim() || video.title,
           uploadDate: video.publishedAt,
           thumbnailUrl: [absoluteUrl(video.coverImage.url)],
           embedUrl: `https://www.youtube.com/embed/${video.youtubeId}`,
