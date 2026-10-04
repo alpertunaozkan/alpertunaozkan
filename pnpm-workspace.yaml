@@ -1,0 +1,7 @@
+# Bağımlılıkların kurulum betiklerine izin listesi (pnpm 11+).
+# unrs-resolver'ın betiği yalnızca platforma uygun native paketi doğrular;
+# pnpm bu paketi zaten kurduğu için çalıştırılmasına gerek yok.
+allowBuilds:
+  unrs-resolver: false
+  # esbuild (tsx'in bağımlılığı) da yalnızca platform paketini doğrular; pnpm onu ayrıca kurar.
+  esbuild: false

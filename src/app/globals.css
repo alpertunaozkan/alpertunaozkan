@@ -1,0 +1,468 @@
+@import "tailwindcss";
+
+/*
+ * Tasarım token'ları
+ * - navy: markanın lacivert tonu (eski sitedeki blue-900 ailesiyle aynı hue)
+ * - gold: logodaki altın (#b88d2a) üzerinden türetilen vurgu rengi
+ * - cream: eski sitenin krem zeminlerinin (#fdf3e7 / #fdf8f2) sadeleştirilmiş hâli
+ * Fontlar next/font ile <html> üzerinde --font-sans / --font-serif olarak tanımlanır.
+ */
+@theme {
+  --color-navy-50: oklch(0.97 0.01 262);
+  --color-navy-100: oklch(0.93 0.022 262);
+  --color-navy-200: oklch(0.86 0.04 262);
+  --color-navy-300: oklch(0.75 0.065 262);
+  --color-navy-400: oklch(0.61 0.09 262);
+  --color-navy-500: oklch(0.5 0.105 262);
+  --color-navy-600: oklch(0.43 0.11 263);
+  --color-navy-700: oklch(0.37 0.105 263);
+  --color-navy-800: oklch(0.31 0.09 264);
+  --color-navy-900: oklch(0.26 0.075 264);
+  --color-navy-950: oklch(0.2 0.055 264);
+
+  --color-gold-50: #fbf7ec;
+  --color-gold-100: #f5ecd3;
+  --color-gold-200: #ebd7a4;
+  --color-gold-300: #ddbf73;
+  --color-gold-400: #cda646;
+  --color-gold-500: #b88d2a;
+  --color-gold-600: #9a7421;
+  --color-gold-700: #7b5c1c;
+  --color-gold-800: #5e461a;
+  --color-gold-900: #3f2f13;
+
+  --color-cream-50: #fffdf9;
+  --color-cream-100: #fbf7f0;
+  --color-cream-200: #f5ecdd;
+  --color-cream-300: #ecdcc3;
+
+  --color-border: oklch(0.91 0.012 262);
+  --color-ring: var(--color-gold-500);
+
+  --shadow-card: 0 1px 2px 0 oklch(0.2 0.055 264 / 0.06);
+  --shadow-elevated: 0 20px 45px -24px oklch(0.2 0.055 264 / 0.35);
+
+  /*
+   * Giriş animasyonları `backwards` doldurma kullanır: animasyon bitince öğede
+   * kalıcı bir transform kalmaz (sabit konumlu alt öğeler etkilenmez).
+   * Kullanım yerlerinde `motion-safe:` ile "hareketi azalt" tercihine uyulur.
+   */
+  --animate-fade-in: fade-in 0.25s ease-out backwards;
+  --animate-fade-up: fade-up 0.5s var(--ease-emphasized) backwards;
+  --animate-pop-in: pop-in 0.22s var(--ease-emphasized) backwards;
+  --animate-toast-in: toast-in 0.4s var(--ease-emphasized) backwards;
+  --animate-toast-out: toast-out 0.18s ease-in forwards;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      translate: 0 0.75rem;
+    }
+  }
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      scale: 0.9;
+    }
+  }
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      translate: 0 1rem;
+      scale: 0.97;
+    }
+  }
+  @keyframes toast-out {
+    to {
+      opacity: 0;
+      translate: 0 0.5rem;
+      scale: 0.97;
+    }
+  }
+}
+
+@layer base {
+  :root {
+    /* Açılışlarda kullanılan yumuşak yavaşlama eğrisi. */
+    --ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  html {
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
+    scroll-padding-top: 5.5rem;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-border);
+  }
+
+  ::selection {
+    background-color: var(--color-gold-200);
+    color: var(--color-navy-950);
+  }
+
+  /* Genel klavye odak göstergesi (ana sayfa slider'ı hariç). */
+  :focus-visible:not(#hero-slider *) {
+    outline: 2px solid var(--color-gold-500);
+    outline-offset: 2px;
+  }
+
+  /*
+   * Slider tasarımı korunduğu için odak görünümü de eski sitedeki gibidir:
+   * eski temadaki `* { outline-ring/50 }` kuralının slider içindeki karşılığı.
+   */
+  #hero-slider * {
+    outline-color: color-mix(in oklab, oklch(0.704 0.04 256.788) 50%, transparent);
+  }
+
+  dialog::backdrop {
+    background-color: oklch(0.2 0.055 264 / 0.55);
+    backdrop-filter: blur(2px);
+  }
+
+  /*
+   * Modal veya mobil menü açıkken arka plandaki sayfa kaymasın. Kilit <html>
+   * üzerindedir: <body>'ye `overflow: hidden` verilirse body kaydırma kabına
+   * dönüşür ve yapışkan (sticky) header sayfanın en üstüne kaçar.
+   */
+  html:has(dialog[open]) {
+    overflow: hidden;
+  }
+  @media (width < 80rem) {
+    html:has(#mobile-menu[data-state="open"]) {
+      overflow: hidden;
+    }
+  }
+}
+
+@layer components {
+  /* Makale gövdesi: API/editörden gelen HTML için tipografi */
+  .prose-legal {
+    @apply text-[1.0625rem] leading-[1.8] text-slate-700;
+    /*
+     * Editörle (Tiptap/ProseMirror) birebir aynı metin kuralları: yazarın
+     * boşlukları korunur, uzun kelime/adresler satıra sığacak şekilde bölünür,
+     * bitişik harf (ligatür) kullanılmaz. Böylece editörde görünen satır
+     * düzeni sitede de aynıdır.
+     */
+    white-space: break-spaces;
+    overflow-wrap: break-word;
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0;
+    -webkit-line-break: after-white-space;
+  }
+  .prose-legal > * + * {
+    @apply mt-5;
+  }
+  .prose-legal > :first-child {
+    @apply mt-0;
+  }
+  .prose-legal h2 {
+    @apply mt-12 font-serif text-[1.625rem] leading-snug font-semibold text-navy-950;
+  }
+  .prose-legal h3 {
+    @apply mt-9 font-serif text-xl leading-snug font-semibold text-navy-950;
+  }
+  .prose-legal :is(h2, h3) + * {
+    @apply mt-3;
+  }
+  .prose-legal strong {
+    @apply font-semibold text-navy-950;
+  }
+  .prose-legal a {
+    @apply font-medium text-navy-700 underline decoration-gold-400 underline-offset-4 hover:decoration-navy-700;
+  }
+  .prose-legal ul {
+    @apply list-disc pl-6;
+  }
+  .prose-legal ol {
+    @apply list-decimal pl-6;
+  }
+  .prose-legal li + li {
+    @apply mt-2;
+  }
+  .prose-legal li::marker {
+    @apply text-gold-600;
+  }
+  .prose-legal blockquote {
+    @apply border-l-2 border-gold-400 pl-5 text-slate-600 italic;
+  }
+  /* Editörden gelen yapı: liste maddesi ve alıntı içinde paragraflar bulunur. */
+  .prose-legal :is(li, blockquote) > * + * {
+    @apply mt-3;
+  }
+  /* Bilerek bırakılan boş satır, editörde nasıl görünüyorsa sitede de öyle görünür. */
+  .prose-legal p:empty {
+    min-height: 1lh;
+  }
+
+  /* Panel içerik editörü (Tiptap): boşken yönlendirici metin. */
+  .ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+    color: var(--color-slate-400);
+  }
+}
+
+/*
+ * Etkileşim animasyonları
+ * Açık/kapalı durumlar her zaman geçerlidir; geçişler yalnızca "hareketi azalt"
+ * tercihi olmayan ziyaretçilerde çalışır. Ana sayfa slider'ı bu kurallardan
+ * etkilenmez (kendi orijinal geçişlerini kullanır).
+ */
+@layer components {
+  /* Mobil menü: header'ın altında açılan tam ekran panel. */
+  .mobile-menu {
+    visibility: hidden;
+    opacity: 0;
+  }
+  .mobile-menu[data-state="open"] {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .mobile-menu {
+      translate: 0 -0.5rem;
+      transition:
+        opacity 0.18s ease-in,
+        translate 0.18s ease-in,
+        visibility 0s linear 0.18s;
+    }
+    .mobile-menu[data-state="open"] {
+      translate: none;
+      transition:
+        opacity 0.3s var(--ease-emphasized),
+        translate 0.3s var(--ease-emphasized),
+        visibility 0s;
+    }
+    .mobile-menu [data-menu-item] {
+      opacity: 0;
+      translate: 0 0.625rem;
+      transition:
+        opacity 0.15s ease-in,
+        translate 0.15s ease-in;
+    }
+    .mobile-menu[data-state="open"] [data-menu-item] {
+      opacity: 1;
+      translate: none;
+      transition:
+        opacity 0.4s var(--ease-emphasized),
+        translate 0.4s var(--ease-emphasized);
+      transition-delay: calc(0.06s + var(--item-index, 0) * 0.04s);
+    }
+
+    /* Modal: hafif büyüyerek belirir, kapanırken solar. */
+    .dialog-pop {
+      opacity: 0;
+      translate: 0 0.75rem;
+      scale: 0.97;
+      transition-property: opacity, translate, scale, overlay, display;
+      transition-duration: 0.16s;
+      transition-timing-function: ease-in;
+      transition-behavior: allow-discrete;
+    }
+    .dialog-pop[open] {
+      opacity: 1;
+      translate: none;
+      scale: none;
+      transition-duration: 0.28s;
+      transition-timing-function: var(--ease-emphasized);
+    }
+    @starting-style {
+      .dialog-pop[open] {
+        opacity: 0;
+        translate: 0 0.75rem;
+        scale: 0.97;
+      }
+    }
+
+    /* Panel yan menüsü (mobil): soldan kayarak açılır. */
+    .drawer-slide {
+      translate: -100% 0;
+      transition-property: translate, overlay, display;
+      transition-duration: 0.2s;
+      transition-timing-function: ease-in;
+      transition-behavior: allow-discrete;
+    }
+    .drawer-slide[open] {
+      translate: none;
+      transition-duration: 0.32s;
+      transition-timing-function: var(--ease-emphasized);
+    }
+    @starting-style {
+      .drawer-slide[open] {
+        translate: -100% 0;
+      }
+    }
+
+    .dialog-pop::backdrop,
+    .drawer-slide::backdrop {
+      opacity: 0;
+      transition-property: opacity, overlay, display;
+      transition-duration: 0.18s;
+      transition-behavior: allow-discrete;
+    }
+    .dialog-pop[open]::backdrop,
+    .drawer-slide[open]::backdrop {
+      opacity: 1;
+      transition-duration: 0.28s;
+    }
+    @starting-style {
+      .dialog-pop[open]::backdrop,
+      .drawer-slide[open]::backdrop {
+        opacity: 0;
+      }
+    }
+
+    /* Açılır/kapanır içerik (<details>): yükseklik ve opaklık geçişi. */
+    .disclosure {
+      interpolate-size: allow-keywords;
+    }
+    .disclosure::details-content {
+      block-size: 0;
+      opacity: 0;
+      overflow-y: clip;
+      transition:
+        block-size 0.32s var(--ease-emphasized),
+        opacity 0.25s ease,
+        content-visibility 0.32s allow-discrete;
+    }
+    .disclosure[open]::details-content {
+      block-size: auto;
+      opacity: 1;
+    }
+  }
+
+  /*
+   * Açılır seçim listeleri: tarayıcı destekliyorsa (customizable select) liste
+   * sitenin tasarımıyla ve animasyonla açılır; desteklemiyorsa yerel liste kullanılır.
+   */
+  .select-enhanced {
+    appearance: none;
+  }
+  @supports (appearance: base-select) {
+    .select-enhanced,
+    .select-enhanced::picker(select) {
+      appearance: base-select;
+    }
+    .select-enhanced {
+      display: flex;
+      align-items: center;
+    }
+    .select-enhanced::picker-icon {
+      display: none;
+    }
+    .select-enhanced::picker(select) {
+      margin-block: 0.375rem;
+      padding: 0.375rem;
+      border: 1px solid var(--color-border);
+      border-radius: 0.75rem;
+      background-color: white;
+      box-shadow: var(--shadow-elevated);
+    }
+    .select-enhanced option {
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--color-navy-950);
+    }
+    .select-enhanced option:hover,
+    .select-enhanced option:focus-visible {
+      background-color: var(--color-navy-50);
+      outline: none;
+    }
+    .select-enhanced option:checked {
+      font-weight: 600;
+    }
+    .select-enhanced option::checkmark {
+      color: var(--color-gold-600);
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .select-enhanced::picker(select) {
+        opacity: 0;
+        translate: 0 -0.25rem;
+        transition-property: opacity, translate, overlay, display;
+        transition-duration: 0.14s;
+        transition-timing-function: ease-in;
+        transition-behavior: allow-discrete;
+      }
+      .select-enhanced:open::picker(select) {
+        opacity: 1;
+        translate: none;
+        transition-duration: 0.22s;
+        transition-timing-function: var(--ease-emphasized);
+      }
+      @starting-style {
+        .select-enhanced:open::picker(select) {
+          opacity: 0;
+          translate: 0 -0.25rem;
+        }
+      }
+    }
+  }
+}
+
+/*
+ * Sayfa geçişleri (React <ViewTransition>, bkz. components/common/page-transition.tsx):
+ * eski sayfa hızla solar, yenisi hafifçe yukarı kayarak belirir.
+ */
+::view-transition {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(.page) {
+    animation: 0.14s ease-in both page-fade-out;
+  }
+  ::view-transition-new(.page) {
+    animation:
+      0.3s var(--ease-emphasized) 0.08s both page-fade-in,
+      0.45s var(--ease-emphasized) 0.08s both page-rise;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+@keyframes page-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes page-rise {
+  from {
+    translate: 0 0.75rem;
+  }
+}

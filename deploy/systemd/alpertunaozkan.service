@@ -1,0 +1,35 @@
+# Avukat Alper Tuna Özkan — uygulamayı ayakta tutan systemd hizmeti (örnek).
+#
+# Varsayımlar: proje /var/www/alpertunaozkan dizininde, sahibi www-data; Node.js 24 sistem
+# genelinde kurulu (node komutu PATH'te); ortam değişkenleri projedeki .env.local dosyasında
+# (izinleri 600, sahibi www-data). Next.js bu dosyayı kendisi okur.
+#
+# Kurulum: sudo cp deploy/systemd/alpertunaozkan.service /etc/systemd/system/
+#          sudo systemctl daemon-reload && sudo systemctl enable --now alpertunaozkan
+# Günlükler: journalctl -u alpertunaozkan -f
+
+[Unit]
+Description=Avukat Alper Tuna Özkan web sitesi (Next.js)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/alpertunaozkan
+Environment=NODE_ENV=production
+# Uygulama yalnızca yerel adreste dinler; dışarıya nginx üzerinden açılır. Next.js doğrudan
+# çalıştırılır (çalışma anında pnpm/corepack gerekmez; kurulum ve derleme pnpm ile yapılır).
+ExecStart=/usr/bin/env node node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000
+Restart=always
+RestartSec=5
+
+# Sıkılaştırma
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
