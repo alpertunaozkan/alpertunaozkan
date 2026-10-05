@@ -1,3 +1,5 @@
+import "server-only";
+
 import { YOUTUBE_COVER_VARIANTS, youtubeThumbnailUrl, type YouTubeCoverVariant } from "@/lib/youtube";
 import type { StoredImage } from "./documents";
 
@@ -15,9 +17,6 @@ export type YouTubeCoverResult = { status: "found"; cover: StoredImage } | { sta
  * çeşit (maxres → sd → hq). YouTube olmayan çeşit için 404 döndürür.
  * YouTube'a hiç ulaşılamazsa (ağ sorunu) her videoda bulunan hqdefault
  * kullanılır; kayıt engellenmez.
- *
- * Not: Bu dosya "server-only" içe aktarmaz; aktarma betiği
- * (scripts/migrate-legacy.ts) de kullanır.
  */
 export async function resolveYouTubeCover(youtubeId: string, title: string): Promise<YouTubeCoverResult> {
   let reachable = false;

@@ -43,10 +43,7 @@ ortam değişkenleri (`.env.local`) doldurulmadan veri gösteremez — bkz. [Kur
      az 12 karakter olmalıdır; şifrenin kendisi hiçbir yere kaydedilmez.
    - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
      (+ `CLOUDINARY_ARTICLE_FOLDER`, varsayılan `articles`).
-3. Eski verileri aktarın: `pnpm db:migrate-legacy --dry-run` ile raporu inceleyin,
-   ardından `pnpm db:migrate-legacy` (canlıya geçişe kadar tekrar çalıştırılabilir) — bkz.
-   [Eski verilerin aktarımı](#eski-verilerin-aktarımı).
-4. `pnpm dev` → http://localhost:3000, panel: http://localhost:3000/admin
+3. `pnpm dev` → http://localhost:3000, panel: http://localhost:3000/admin
 
 Bir ortam değişkeni eksik veya hatalıysa ilgili işlem `[ortam] … ayarları eksik veya
 hatalı: … Bkz. .env.example` hatasıyla durur (değerler ilk kullanıldıkları anda,
@@ -61,7 +58,6 @@ pnpm start                  # derlenmiş uygulamayı çalıştırır
 pnpm lint
 pnpm typecheck              # next typegen + tsc --noEmit
 pnpm admin:hash-password    # yönetici şifresini belirler (.env.local'a yazar; --print: yalnızca yazdırır)
-pnpm db:migrate-legacy      # eski API verilerini aktarır/eşitler (--dry-run: yalnızca rapor, --prune: silinenleri kaldırır)
 ```
 
 ### Bağımlılık notları
@@ -101,8 +97,7 @@ deploy/
 ├── nginx/alpertunaozkan.conf          # HTTPS, www yönlendirmesi, eski panel adresi, gerçek IP iletimi
 └── systemd/alpertunaozkan.service     # uygulamayı sunucuda ayakta tutan hizmet
 scripts/
-├── hash-password.ts        # pnpm admin:hash-password
-└── migrate-legacy.ts       # pnpm db:migrate-legacy
+└── hash-password.ts        # pnpm admin:hash-password
 src/
 ├── app/
 │   ├── (public)/           # public sayfalar (header/footer layout'u)
@@ -159,8 +154,8 @@ src/
 
 ### Veritabanı
 
-Yeni site eski API'nin koleksiyonlarını kullanmaz; kendi koleksiyonları vardır
-(`src/server/documents.ts`). İndeksler uygulama ilk bağlandığında oluşturulur.
+Koleksiyonlar ve belge şemaları `src/server/documents.ts` içindedir. İndeksler uygulama
+ilk bağlandığında oluşturulur.
 
 | Koleksiyon | İçerik | Önemli indeksler |
 | --- | --- | --- |
@@ -170,10 +165,6 @@ Yeni site eski API'nin koleksiyonlarını kullanmaz; kendi koleksiyonları vard�
 | `contact_messages` | iletişim formu mesajları | `createdAt` |
 | `admin_sessions` | yönetici oturumları | `tokenHash` benzersiz, süresi dolan otomatik silinir (TTL) |
 | `rate_limits` | deneme sayaçları | süresi dolan otomatik silinir (TTL) |
-| `legacy_imports` | yalnızca aktarma betiğinin kayıtları (geçiş bitince silinebilir) | — |
-
-Eski verilerden aktarılan kayıtlar `legacyId` alanında eski belgenin kimliğini,
-`legacyUpdatedAt` alanında son eşitlenen sürümünü taşır.
 
 ### Görseller (Cloudinary)
 
@@ -236,61 +227,6 @@ yazın) ve uygulamayı yeniden başlatın. Oturumlar açıldıkları andaki giri
 bağlı olduğundan **eski oturumların hepsi kendiliğinden kapanır** (başka bir cihazda
 açık kalmış oturum dahil).
 
-## Eski verilerin aktarımı
-
-`pnpm db:migrate-legacy` eski API'nin koleksiyonlarını (`kategoriler`, `makalelerim`,
-`videolarim`, `iletisim`) **yalnızca okur** ve yeni koleksiyonlara aktarır; eski
-koleksiyonlar değiştirilmez, eski site çalışmaya devam eder.
-
-- Önce `pnpm db:migrate-legacy --dry-run`: hiçbir şey yazmadan ne yapılacağını ve
-  uyarıları listeler.
-- **Canlıya geçişe kadar istendiği kadar çalıştırılabilir (eşitleme):**
-  - eski sistemde yeni eklenen kayıt eklenir;
-  - eski sistemde değiştirilen kayıt, yeni panelde düzenlenmemişse güncellenir
-    (adresi değişen makalenin eski adresi yeni adrese yönlenir);
-  - iki tarafta da değiştirilen kayıtta yeni sitedeki hâl korunur ve raporda belirtilir;
-  - yeni panelde silinen kayıt bir daha aktarılmaz;
-  - eski sistemde silinen kayıt raporda listelenir; `--prune` ile (yeni panelde
-    düzenlenmemişse) yeni siteden de silinir.
-- Yeni panelde yapılan değişikliklerin üzerine hiçbir durumda yazılmaz.
-- Kaynak: varsayılan olarak `MONGODB_URI` adresindeki veritabanı (eski API'nin
-  kullandığı). Eski veriler başka bir küme/veritabanındaysa `LEGACY_MONGODB_URI` /
-  `LEGACY_MONGODB_DB`. Değişkenler kabuktan, yoksa `.env.local` ve `.env`'den okunur.
-- **Makaleler:** adresleri (slug) aynen korunur, hepsi "yayında" aktarılır (yayın
-  tarihi = eski oluşturulma tarihi). İçerik yeni editörün yapısına uyarlanır. Özeti
-  olmayan makaleye metnin başından özet, okuma süresi olmayana içerikten süre
-  hesaplanır. Cloudinary ayarları tanımlıysa kapak görselinin asıl adresi ve gerçek
-  boyutları Cloudinary'den alınır.
-- **Videolar:** kapak, eski Cloudinary kopyası yerine doğrudan YouTube'dan alınır.
-  YouTube'da artık bulunmayan veya aynı YouTube ID'sine ikinci kez bağlanmış kayıtlar
-  aktarılmaz ve raporda listelenir. Eski sistemde video açıklaması, süresi ve ilgili
-  makale bilgisi olmadığından bunlar panelden eklenebilir.
-- **Mesajlar:** "okundu" olarak aktarılır (okunmamış sayacını şişirmemek için).
-- Site çalışırken aktarım yapıldıysa public sayfalar bir sonraki derlemede veya
-  panelde herhangi bir kayıt kaydedildiğinde güncellenir.
-
-## Canlıya geçiş adımları
-
-Yeni site, eski sitenin yerine aynı alan adı ve sunucuya taşınacaktır.
-
-1. **Son eşitleme:** `pnpm db:migrate-legacy --dry-run` raporunu inceleyin, ardından
-   `pnpm db:migrate-legacy --prune` (eski panelde geçiş süresince yapılan ekleme,
-   değişiklik ve silmeler yeni siteye yansır).
-2. Yeni siteyi sunucuda kurup başlatın: [Sunucuya kurulum](#sunucuya-kurulum-vps).
-3. Alan adını yeni uygulamaya yönlendirin; eski panel adresi (`panel.alpertunaozkan.com`)
-   `https://www.alpertunaozkan.com/admin` adresine kalıcı olarak yönlenir (`deploy/nginx`).
-4. Yeni site doğrulandıktan sonra eski proje kaldırılır ve artık kullanılmayan veriler
-   temizlenir:
-   - Atlas: eski API'nin veritabanı (`makalelerim`, `kategoriler`, `videolarim`, `iletisim`,
-     `users`, `sessions`) silinir (istenirse önce dışa aktarılır); yeni veritabanındaki
-     `legacy_imports` koleksiyonu silinir; eski API'nin veritabanı kullanıcısı kaldırılır ve
-     yeni sitenin kullanıcısından eski veritabanını okuma yetkisi alınır. Ağ erişim listesi
-     yalnızca sunucunun IP'siyle sınırlanmalıdır.
-   - Cloudinary: `videos/` klasörü (eski API'nin YouTube kapak kopyaları; yeni site
-     kapakları doğrudan YouTube'dan alır) silinir; eski API anahtarı iptal edilir.
-     `articles/` klasörü yeni sitenin görsel kütüphanesidir, **silinmez**.
-   - Ortam: `LEGACY_*` değişkenleri kaldırılır.
-
 ## Sunucuya kurulum (VPS)
 
 Örnek yapılandırmalar `deploy/` klasöründedir; yollar ve kullanıcı gerekirse uyarlanır.
@@ -304,15 +240,11 @@ böylece `.next` çıktısının sahibi hizmetle aynı olur.
    sahibi `www-data`). Yönetici şifresi sunucuda `pnpm admin:hash-password` ile de
    belirlenebilir.
 4. Bağımlılıklar: `pnpm install --frozen-lockfile`.
-5. Geçiş günü son eşitleme (derlemeden **önce**, sayfalar güncel veriyle üretilsin):
-   `pnpm db:migrate-legacy --dry-run`, ardından `pnpm db:migrate-legacy --prune`.
-6. Derleme: `pnpm build`.
-7. Hizmet: `deploy/systemd/alpertunaozkan.service` → `/etc/systemd/system/`, ardından
+5. Derleme: `pnpm build`.
+6. Hizmet: `deploy/systemd/alpertunaozkan.service` → `/etc/systemd/system/`, ardından
    `sudo systemctl daemon-reload && sudo systemctl enable --now alpertunaozkan`.
-8. nginx: eski projenin bu alan adlarına ait server blokları devre dışı bırakılır;
-   `deploy/nginx/alpertunaozkan.conf` etkinleştirilir, sertifika alınır (dosyadaki certbot
-   komutu), `sudo nginx -t && sudo systemctl reload nginx`.
-9. Eski site, panel ve API hizmetleri durdurulur.
+7. nginx: `deploy/nginx/alpertunaozkan.conf` etkinleştirilir, sertifika alınır (dosyadaki
+   certbot komutu), `sudo nginx -t && sudo systemctl reload nginx`.
 
 **Güncelleme:** (`www-data` kullanıcısıyla) `git pull && pnpm install --frozen-lockfile && pnpm build`,
 ardından `sudo systemctl restart alpertunaozkan`.
@@ -332,9 +264,6 @@ ardından `sudo systemctl restart alpertunaozkan`.
   deneme sınırları IP başına doğru çalışmaz. (Vercel bu başlığı kendisi ayarlar.)
 - Uygulama birden fazla sunucu/örnekte çalışacaksa hepsinde aynı
   `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` tanımlanmalıdır.
-- **Eski panel:** geçiş döneminde eski panelden makale silinmemeli veya kapağı
-  değiştirilmemelidir — eski API bu durumda görseli Cloudinary'den siler ve aynı görseli
-  kullanan yeni sitedeki makalenin kapağı kaybolur.
 
 ## Makale editörü ve kapak görselleri
 
@@ -406,6 +335,10 @@ Header yüksekliği (72px) slider yüksekliğiyle (`calc(100dvh-72px)`) bağlant
 - Sitenin sabit görselleri (slider, profil, ofis, OG görseli, logo) eski projeden
   alınmıştır ve `public/images` altındadır. Makale kapakları Cloudinary'den, video
   kapakları YouTube'dan gelir.
+- **Geçmiş:** Site 5 Ekim 2026'da eski projenin (Vercel'deki site ve panel, VPS'teki API)
+  yerine geçti. Eski API'nin makale, kategori ve video kayıtları bu yapıya aktarıldı
+  (adresler korunarak); ardından eski site, panel, API ve eski veriler kaldırıldı.
+  Eski panel adresi (`panel.alpertunaozkan.com`) `/admin`'e yönlenir.
 - Eski projede tespit edilip **doğrulanması önerilen** tutarsızlıklar:
   - İki farklı adres: iletişim sayfasında "Yaylacık Mah. … Aydınlık Apt. No: 22/9",
     Kırıkkale sayfasında "Fabrikalar Mah. … No: 22". Yeni sitede ilki kullanıldı.
@@ -413,10 +346,7 @@ Header yüksekliği (72px) slider yüksekliğiyle (`calc(100dvh-72px)`) bağlant
     bağlantılardaki `@av.alpertunaozkan` kullanıldı. LinkedIn/Facebook bağlantıları
     genel adreslerdi (`linkedin.com`), eklenmedi.
   - Eski veritabanında "Tapuda Metrekare Eksildi!" kaydı, "Muris Muvazaası" videosunun
-    ID'sine (`JaNQf95xeSY`) bağlıydı; doğrusu `YUGONMDWA3M`. Yeni site aynı YouTube ID'sinin
-    iki kez eklenmesine izin vermediği için aktarım böyle ikinci bir kaydı atlar ve raporda
-    listeler. Aktarımdan sonra panelde bu videoların YouTube ID'leri kontrol edilmeli,
-    eksik kalan video doğru ID ile eklenmelidir.
+    ID'sine (`JaNQf95xeSY`) bağlıydı; aktarımda doğru ID'ye (`YUGONMDWA3M`) düzeltildi.
   - Eski public site, API'nin makaleler için döndürdüğü `publishedAt` yerine `createdAt`
     okuduğundan tarih bulunamayınca "şu an"a düşüyordu (makaleler bugünün tarihiyle
     görünüyordu); yeni site `publishedAt`/`updatedAt` kullanır.

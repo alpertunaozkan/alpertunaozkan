@@ -11,8 +11,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
-    "admin:hash-password": "tsx scripts/hash-password.ts",
-    "db:migrate-legacy": "tsx scripts/migrate-legacy.ts"
+    "admin:hash-password": "tsx scripts/hash-password.ts"
   },
   "dependencies": {
     "@tiptap/extensions": "^3.31.4",
