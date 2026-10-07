@@ -8,7 +8,7 @@ import { ContactCta } from "@/components/public/contact-cta";
 import { PageHero } from "@/components/public/page-hero";
 import { ButtonLink } from "@/components/ui/button";
 import { CONTACT, LOCATION_PAGE } from "@/constants/site";
-import { ABOUT_BIO, ABOUT_FACTS, ABOUT_PRINCIPLES, OFFICE_PHOTOS } from "@/data/about";
+import { ABOUT_BIO, ABOUT_PRINCIPLES, OFFICE_PHOTOS } from "@/data/about";
 import { buildPageMetadata } from "@/lib/seo";
 import { personJsonLd } from "@/lib/structured-data";
 
@@ -58,17 +58,6 @@ export default function AboutPage() {
                   />
                 </div>
               </div>
-
-              <dl className="mt-10 divide-y divide-navy-900/[0.08] rounded-2xl border border-navy-900/[0.08] bg-cream-50">
-                {ABOUT_FACTS.map((fact) => (
-                  <div key={fact.label} className="flex items-baseline justify-between gap-6 px-5 py-4">
-                    <dt className="text-xs font-semibold tracking-[0.14em] text-gold-700 uppercase">
-                      {fact.label}
-                    </dt>
-                    <dd className="text-right text-sm font-medium text-navy-950">{fact.value}</dd>
-                  </div>
-                ))}
-              </dl>
             </div>
           </div>
 

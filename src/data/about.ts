@@ -7,13 +7,6 @@ export const ABOUT_BIO: string[] = [
   "Her vakaya derin bir özenle yaklaşan Av. Alper Tuna Özkan, hukuki süreçleri sadece dava gözüyle değerlendirmekle kalmayıp, stratejik ve pratik çözümler geliştirerek müvekkillerinin haklarını korumakta ve hukuki süreçlerini etkin şekilde yönetmektedir. Etik ve profesyonel yaklaşımı, derin alan bilgisi ve çözüm odaklı çalışmasıyla, gayrimenkul ve miras hukuku alanında uzman bir avukat olarak öne çıkmaktadır.",
 ];
 
-/** Biyografideki bilgilerden derlenen kısa künye. */
-export const ABOUT_FACTS = [
-  { label: "Doğum", value: "1994, Kırıkkale" },
-  { label: "Eğitim", value: "Ufuk Üniversitesi Hukuk Fakültesi (2019)" },
-  { label: "Uzmanlık", value: "Gayrimenkul ve Miras Hukuku" },
-] as const;
-
 /** Biyografinin son paragrafında vurgulanan çalışma ilkeleri. */
 export const ABOUT_PRINCIPLES = [
   {

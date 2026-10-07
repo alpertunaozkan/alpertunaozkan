@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { Container } from "@/components/common/container";
 import { Section, SectionHeading } from "@/components/common/section";
 import { ButtonLink } from "@/components/ui/button";
-import { ABOUT_BIO, ABOUT_FACTS } from "@/data/about";
+import { ABOUT_BIO } from "@/data/about";
 
 export function AboutTeaser() {
   return (
@@ -29,15 +29,6 @@ export function AboutTeaser() {
         <div className="lg:col-span-7">
           <SectionHeading id="hakkimda-ozet" eyebrow="Hakkımda" title="Av. Alper Tuna Özkan" />
           <p className="mt-6 text-base leading-relaxed text-slate-600 sm:text-lg">{ABOUT_BIO[0]}</p>
-
-          <dl className="mt-8 grid gap-px overflow-hidden rounded-xl border border-navy-900/[0.08] bg-navy-900/[0.08] sm:grid-cols-3">
-            {ABOUT_FACTS.map((fact) => (
-              <div key={fact.label} className="bg-white px-5 py-4">
-                <dt className="text-xs font-semibold tracking-[0.14em] text-gold-700 uppercase">{fact.label}</dt>
-                <dd className="mt-1.5 text-sm font-medium text-navy-950">{fact.value}</dd>
-              </div>
-            ))}
-          </dl>
 
           <div className="mt-8 flex flex-wrap gap-3">
             <ButtonLink href="/hakkimda">
