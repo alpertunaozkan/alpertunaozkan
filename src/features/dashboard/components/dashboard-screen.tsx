@@ -2,21 +2,27 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ArrowRight, Clapperboard, FolderTree, Inbox, Newspaper, PencilLine } from "lucide-react";
+import { ArrowRight, Clapperboard, Eye, FolderTree, Inbox, Newspaper, PencilLine } from "lucide-react";
 import { AdminPageHeader, ArticleStatusBadge, EmptyState } from "@/components/admin/admin-ui";
 import { FramedImage } from "@/components/common/framed-image";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdminData } from "@/features/admin/admin-data-provider";
 import { VideoCover } from "@/features/videos/components/video-thumbnail";
-import { formatDuration, formatDurationLong, formatShortDate } from "@/lib/format";
+import { formatCount, formatDuration, formatDurationLong, formatShortDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import type { DashboardStats } from "@/types";
+import type { ArticleViewCounts, DashboardStats } from "@/types";
 import { computeDashboardStats } from "../stats";
 
 /** Genel Bakış listelerinde gösterilen kayıt sayısı. */
 const RECENT_LIMIT = 5;
 
-export function DashboardScreen({ serverStats }: { serverStats: DashboardStats }) {
+export function DashboardScreen({
+  serverStats,
+  viewCounts,
+}: {
+  serverStats: DashboardStats;
+  viewCounts: ArticleViewCounts;
+}) {
   const { data, isPristine } = useAdminData();
 
   // Özet sunucudan gelir; bu oturumda değişiklik yapıldıysa aynı hesaplama
@@ -28,6 +34,14 @@ export function DashboardScreen({ serverStats }: { serverStats: DashboardStats }
   const recentVideos = [...data.videos].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, RECENT_LIMIT);
   const recentCategories = stats.contentByCategory.slice(0, RECENT_LIMIT);
   const maxCategoryTotal = Math.max(1, ...recentCategories.map((item) => item.articles + item.videos));
+
+  const articleViews = data.articles.map((article) => ({ article, views: viewCounts[article.id] ?? 0 }));
+  const totalViews = articleViews.reduce((sum, item) => sum + item.views, 0);
+  const mostViewed = articleViews
+    .filter((item) => item.views > 0)
+    .sort((a, b) => b.views - a.views)
+    .slice(0, RECENT_LIMIT);
+  const maxViews = Math.max(1, ...mostViewed.map((item) => item.views));
 
   return (
     <>
@@ -248,6 +262,52 @@ export function DashboardScreen({ serverStats }: { serverStats: DashboardStats }
                     </li>
                   );
                 })}
+              </ul>
+            )}
+          </Card>
+
+          <Card>
+            <ListCardHeader
+              title="En çok görüntülenen makaleler"
+              description={
+                totalViews > 0 ? `Sitede toplam ${formatCount(totalViews)} görüntülenme` : "Makale sayfalarının sitede açılma sayısı"
+              }
+              href="/admin/makaleler"
+              linkContext="makaleler"
+            />
+            {mostViewed.length === 0 ? (
+              <EmptyState
+                icon={<Eye />}
+                title="Henüz görüntülenme yok"
+                description="Makaleleriniz sitede açıldıkça burada listelenir."
+                className="py-10"
+              />
+            ) : (
+              <ul className="divide-y divide-navy-900/[0.06]">
+                {mostViewed.map(({ article, views }) => (
+                  <li key={article.id}>
+                    <Link
+                      href={`/admin/makaleler/${article.id}`}
+                      className="group block px-5 py-3 transition-colors hover:bg-slate-50"
+                    >
+                      <div className="flex items-start justify-between gap-3 text-sm">
+                        <span className="line-clamp-2 min-w-0 font-medium text-navy-950 group-hover:text-navy-700">
+                          {article.title}
+                        </span>
+                        <span className="shrink-0 font-semibold text-navy-950 tabular-nums">
+                          {formatCount(views)}
+                          <span className="sr-only"> görüntülenme</span>
+                        </span>
+                      </div>
+                      <div className="mt-2 h-2" aria-hidden="true">
+                        <div
+                          className="h-full rounded-r-[4px] bg-navy-600"
+                          style={{ width: `${(views / maxViews) * 100}%` }}
+                        />
+                      </div>
+                    </Link>
+                  </li>
+                ))}
               </ul>
             )}
           </Card>

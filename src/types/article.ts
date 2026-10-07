@@ -26,6 +26,9 @@ export interface Article {
 /** Listelerde içerik gövdesi taşınmaz (daha hafif payload). */
 export type ArticleSummary = Omit<Article, "content">;
 
+/** Panel: makale kimliği → sitedeki görüntülenme sayısı (herkese açık sayfalara gitmez). */
+export type ArticleViewCounts = Record<string, number>;
+
 /** Panel formunun ürettiği ve sunucuya (Server Action) gönderilen gövde. */
 export interface ArticleInput {
   title: string;

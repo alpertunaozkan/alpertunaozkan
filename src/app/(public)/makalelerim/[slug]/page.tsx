@@ -13,6 +13,7 @@ import { CONTACT } from "@/constants/site";
 import { ArticleCard } from "@/features/articles/components/article-card";
 import { ArticleHero } from "@/features/articles/components/article-hero";
 import { ArticleToc } from "@/features/articles/components/article-toc";
+import { ArticleViewTracker } from "@/features/articles/components/article-view-tracker";
 import { AuthorBox } from "@/features/articles/components/author-box";
 import {
   findRenamedArticleSlug,
@@ -195,6 +196,7 @@ export default async function ArticlePage({ params }: PageProps<"/makalelerim/[s
 
       <ContactCta />
       <JsonLd data={[articleJsonLd, breadcrumbJsonLd(breadcrumbs, path)]} />
+      <ArticleViewTracker articleId={article.id} />
     </>
   );
 }

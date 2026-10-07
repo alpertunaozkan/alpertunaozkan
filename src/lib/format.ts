@@ -28,6 +28,8 @@ const dateTime = new Intl.DateTimeFormat("tr-TR", {
   timeZone: TIME_ZONE,
 });
 
+const count = new Intl.NumberFormat("tr-TR");
+
 function toDate(value: string | Date): Date | null {
   const date = typeof value === "string" ? new Date(value) : value;
   return Number.isNaN(date.getTime()) ? null : date;
@@ -49,6 +51,11 @@ export function formatShortDate(value: string | Date): string {
 export function formatDateTime(value: string | Date): string {
   const date = toDate(value);
   return date ? dateTime.format(date) : "";
+}
+
+/** 1284 → "1.284" */
+export function formatCount(value: number): string {
+  return count.format(value);
 }
 
 /** 249 → "4:09" */

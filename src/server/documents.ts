@@ -41,6 +41,8 @@ export interface ArticleDocument {
   updatedAt: Date;
   /** Yayındayken değiştirilen eski adresler; eski bağlantılar yeni adrese kalıcı (308) yönlenir. */
   previousSlugs?: string[];
+  /** Sitedeki görüntülenme sayısı (yalnızca panelde gösterilir); henüz sayılmadıysa alan yoktur. */
+  viewCount?: number;
 }
 
 export interface CategoryDocument {

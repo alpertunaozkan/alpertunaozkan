@@ -104,6 +104,7 @@ src/
 │   ├── admin/
 │   │   ├── login/          # giriş ekranı
 │   │   └── (panel)/        # sidebar'lı panel sayfaları (layout oturumu doğrular)
+│   ├── api/makale-goruntulenme/  # makale görüntülenme sayacı (POST)
 │   ├── layout.tsx          # kök layout (fontlar, varsayılan metadata)
 │   └── sitemap.ts, robots.ts, manifest.ts, not-found.tsx, error.tsx
 ├── proxy.ts                # /admin için hızlı ön kontrol (oturum çerezi yoksa girişe yönlendirir)
@@ -151,6 +152,12 @@ src/
 - **İletişim formu** (`src/features/contacts/submit-contact.ts`): sunucuda doğrulanır,
   gizli bir tuzak alanı (bot koruması) ve IP başına saatte 5 mesaj sınırı vardır; mesaj
   "okunmamış" olarak kaydedilir.
+- **Makale görüntülenme sayısı** (`src/app/api/makale-goruntulenme/route.ts`): makale
+  sayfası tarayıcıda açılınca `ArticleViewTracker` sayacı bir artırır (`articles.viewCount`).
+  Aynı sekmede tekrar açılış, botlar, panelde oturumu açık yönetici, sitenin kendi
+  adresinden gelmeyen istekler (yerel geliştirme dahil) ve IP başına saatte 30'u aşan
+  istekler sayılmaz. Çerez kullanılmaz, IP veritabanına yazılmaz. Sayılar yalnızca panelde
+  (Makaleler listesi, Genel Bakış) görünür; public sayfalar statik kalır.
 
 ### Veritabanı
 
@@ -159,7 +166,7 @@ ilk bağlandığında oluşturulur.
 
 | Koleksiyon | İçerik | Önemli indeksler |
 | --- | --- | --- |
-| `articles` | makaleler (taslak/yayında) | `slug` benzersiz, `previousSlugs`, `status + publishedAt` |
+| `articles` | makaleler (taslak/yayında, görüntülenme sayısı) | `slug` benzersiz, `previousSlugs`, `status + publishedAt` |
 | `categories` | kategoriler | `slug` benzersiz, `name` benzersiz (Türkçe, büyük/küçük harf duyarsız) |
 | `videos` | YouTube videoları | `youtubeId` benzersiz |
 | `contact_messages` | iletişim formu mesajları | `createdAt` |

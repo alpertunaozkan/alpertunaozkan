@@ -11,10 +11,10 @@ import { Card } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/form-controls";
 import { useToast } from "@/components/ui/toast";
 import { errorMessage } from "@/lib/action-result";
-import { formatShortDate } from "@/lib/format";
+import { formatCount, formatShortDate } from "@/lib/format";
 import { normalizeForSearch } from "@/lib/text";
 import { cn } from "@/lib/utils";
-import type { Article, ArticleStatus } from "@/types";
+import type { Article, ArticleStatus, ArticleViewCounts } from "@/types";
 import { useArticlesAdmin } from "../../hooks/use-articles-admin";
 
 type StatusFilter = "all" | ArticleStatus;
@@ -25,7 +25,7 @@ const STATUS_FILTERS: Array<{ value: StatusFilter; label: string }> = [
   { value: "draft", label: "Taslak" },
 ];
 
-export function ArticlesScreen() {
+export function ArticlesScreen({ viewCounts }: { viewCounts: ArticleViewCounts }) {
   const { notify } = useToast();
   const { articles, categories, removeArticle } = useArticlesAdmin();
   const [status, setStatus] = useState<StatusFilter>("all");
@@ -154,6 +154,7 @@ export function ArticlesScreen() {
                     <th scope="col" className="px-5 py-3 font-medium">Makale</th>
                     <th scope="col" className="hidden px-3 py-3 font-medium xl:table-cell">Kategori</th>
                     <th scope="col" className="px-3 py-3 font-medium">Durum</th>
+                    <th scope="col" className="px-3 py-3 text-right font-medium">Görüntülenme</th>
                     <th scope="col" className="hidden px-3 py-3 font-medium xl:table-cell">Güncelleme</th>
                     <th scope="col" className="px-5 py-3 text-right font-medium">
                       <span className="sr-only">İşlemler</span>
@@ -184,6 +185,9 @@ export function ArticlesScreen() {
                       <td className="px-3 py-3">
                         <ArticleStatusBadge status={article.status} />
                       </td>
+                      <td className="px-3 py-3 text-right whitespace-nowrap text-slate-600 tabular-nums">
+                        {formatCount(viewCounts[article.id] ?? 0)}
+                      </td>
                       <td className="hidden px-3 py-3 whitespace-nowrap text-slate-600 xl:table-cell">{formatShortDate(article.updatedAt)}</td>
                       <td className="px-5 py-3">
                         <RowActions article={article} onDelete={() => setPendingDelete(article)} />
@@ -207,6 +211,8 @@ export function ArticlesScreen() {
                       <span>{article.category?.name ?? "Kategorisiz"}</span>
                       <span aria-hidden="true">·</span>
                       <span>{formatShortDate(article.updatedAt)}</span>
+                      <span aria-hidden="true">·</span>
+                      <span>{formatCount(viewCounts[article.id] ?? 0)} görüntülenme</span>
                     </div>
                     <RowActions article={article} onDelete={() => setPendingDelete(article)} className="mt-2 justify-start" />
                   </div>

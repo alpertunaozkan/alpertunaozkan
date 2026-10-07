@@ -6,7 +6,7 @@ import { getCollections } from "@/server/db";
 import { requireAdmin } from "@/server/dal";
 import type { ArticleDocument } from "@/server/documents";
 import { loadCategoryRefs, toArticle, type CategoryRefs } from "@/server/mappers";
-import type { Article, ArticleSummary } from "@/types";
+import type { Article, ArticleSummary, ArticleViewCounts } from "@/types";
 
 /*
  * Makale okuma katmanı (MongoDB). Herkese açık sayfalar derlemede ve panelde
@@ -79,4 +79,15 @@ export const getArticlesForAdmin = cache(async (): Promise<Article[]> => {
     loadCategoryRefs(c),
   ]);
   return docs.map((doc) => toArticle(withCleanContent(doc), refs));
+});
+
+/**
+ * Panel: makalelerin sitedeki görüntülenme sayıları (bkz. src/app/api/makale-goruntulenme).
+ * Sayfa açıldıkça güncel değer gelsin diye panel verisinden ayrı, sayfa başına okunur.
+ */
+export const getArticleViewCounts = cache(async (): Promise<ArticleViewCounts> => {
+  await requireAdmin();
+  const c = await getCollections();
+  const docs = await c.articles.find({}, { projection: { viewCount: 1 } }).toArray();
+  return Object.fromEntries(docs.map((doc) => [doc._id.toHexString(), doc.viewCount ?? 0]));
 });
